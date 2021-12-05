@@ -7,4 +7,4 @@
    * REACT_APP_NFTADDRESS => Contract address for create a NFTs
    * REACT_APP_IPFS_PROJECT_ID => Id of endpoint Infura IPFS
    * REACT_APP_IPFS_PROJECT_SECRET => Secret of endpoint Infura IPFS
-6- Run the proyect with the command: yarn start
+6. Run the proyect with the command: yarn start
