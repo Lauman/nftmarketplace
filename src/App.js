@@ -1,24 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
-
+import React, { useState } from "react";
+import "./App.css";
+import "./index.css";
+import { Routes, Route } from "react-router-dom";
+import Menu from "./pages/menu";
+import Galery from "./pages/galery";
+import CreateItem from "./pages/createItem";
+import Home from "./pages/home";
+import AuthContext from "./auth/context";
+import MyNftsPurchased from "./pages/myNftsPurchased";
 function App() {
+  const [account, setAccount] = useState(null);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthContext.Provider
+      value={{
+        account,
+        setAccount,
+      }}
+    >
+      <div className="container mx-auto">
+        {account ? <Menu></Menu> : null}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="galery" element={account ? <Galery /> : <Home />} />
+          <Route
+            path="createitem"
+            element={account ? <CreateItem /> : <Home />}
+          />
+        </Routes>
+      </div>
+    </AuthContext.Provider>
   );
 }
 
