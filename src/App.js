@@ -26,6 +26,10 @@ function App() {
             path="createitem"
             element={account ? <CreateItem /> : <Home />}
           />
+          <Route
+            path="mynftspurchased"
+            element={account ? <MyNftsPurchased /> : <Home />}
+          />
         </Routes>
       </div>
     </AuthContext.Provider>
