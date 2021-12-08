@@ -7,6 +7,7 @@ import backgroundImage from "../assets/background.jpg";
 
 import NFT from "../artifacts/contracts/NFT.sol/NFT.json";
 import Market from "../artifacts/contracts/Market.sol/NFTMarket.json";
+import Token from "../artifacts/contracts/TokenLD.sol/TokenLD.json";
 
 const Galery = () => {
   const [nfts, setNfts] = useState([]);
@@ -14,13 +15,13 @@ const Galery = () => {
   useEffect(() => {
     loadNFTs();
   }, []);
-
+  const [coin, setCoin] = useState(0);
   async function loadNFTs() {
     if (typeof window.ethereum !== "undefined") {
       /* create a generic provider and query for unsold market items */
       //const provider = new ethers.providers.JsonRpcProvider();
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const tokenContract = new ethers.Contract(
+      const tokenNftContract = new ethers.Contract(
         process.env.REACT_APP_NFTADDRESS,
         NFT.abi,
         provider
@@ -28,6 +29,11 @@ const Galery = () => {
       const marketContract = new ethers.Contract(
         process.env.REACT_APP_NFTMARKETADDRES,
         Market.abi,
+        provider
+      );
+      const tokenContract = new ethers.Contract(
+        process.env.REACT_APP_TOKENCONTRACT,
+        Token.abi,
         provider
       );
       const data = await marketContract.fetchMarketItems();
@@ -38,7 +44,7 @@ const Galery = () => {
        */
       const items = await Promise.all(
         data.map(async (i) => {
-          const tokenUri = await tokenContract.tokenURI(i.tokenId);
+          const tokenUri = await tokenNftContract.tokenURI(i.tokenId);
           const meta = await axios.get(tokenUri);
           let price = ethers.utils.formatUnits(i.price.toString(), "ether");
           let item = {
@@ -69,17 +75,43 @@ const Galery = () => {
       signer
     );
 
-    /* user will be prompted to pay the asking proces to complete the transaction */
-    const price = ethers.utils.parseUnits(nft.price.toString(), "ether");
-    const transaction = await contract.createMarketSale(
-      process.env.REACT_APP_NFTADDRESS,
-      nft.tokenId,
-      {
-        value: price,
-      }
+    const tokenContract = new ethers.Contract(
+      process.env.REACT_APP_TOKENCONTRACT,
+      Token.abi,
+      signer
     );
-    await transaction.wait();
-    loadNFTs();
+
+    /* user will be prompted to pay the asking proces to complete the transaction */
+
+    if (coin === 0) {
+      console.log("Entro eth");
+      const price = ethers.utils.parseUnits(nft.price.toString(), "ether");
+      const transaction = await contract.createMarketSale(
+        process.env.REACT_APP_NFTADDRESS,
+        nft.tokenId,
+        true,
+        process.env.REACT_APP_0ADDRESS,
+        ethers.utils.parseUnits("0", "ether"),
+        {
+          value: price,
+        }
+      );
+      await transaction.wait();
+      loadNFTs();
+    } else {
+      const priceTemp = nft.price / process.env.REACT_APP_ETHEREQUIVALENCE;
+      const price = ethers.utils.parseUnits(priceTemp.toString(), "ether");
+      await tokenContract.approve(process.env.REACT_APP_NFTMARKETADDRES, price);
+      const transaction = await contract.createMarketSale(
+        process.env.REACT_APP_NFTADDRESS,
+        nft.tokenId,
+        false,
+        process.env.REACT_APP_TOKENCONTRACT,
+        price
+      );
+      await transaction.wait();
+      loadNFTs();
+    }
   }
   if (loadingState === "loaded" && !nfts.length)
     return <h1 className="px-20 py-10 text-3xl">No items in marketplace</h1>;
@@ -107,9 +139,24 @@ const Galery = () => {
                 </div>
               </div>
               <div className="p-4 bg-black">
-                <p className="text-2xl mb-4 font-bold text-white">
-                  {nft.price} ETH
-                </p>
+                {process.env.REACT_APP_ETHEREQUIVALENCE > nft.price ? (
+                  <p className="text-2xl mb-4 font-bold text-white">
+                    {nft.price} ETH
+                  </p>
+                ) : (
+                  <select
+                    onChange={(e) => setCoin(e.target.value)}
+                    className="form-select block w-full mt-1"
+                    value={coin}
+                  >
+                    <option value={0}>{nft.price} ETH</option>
+                    <option value={1}>
+                      {nft.price / process.env.REACT_APP_ETHEREQUIVALENCE}
+                      LD Coin
+                    </option>
+                  </select>
+                )}
+
                 <button
                   className="w-full bg-indigo-500 text-white font-bold py-2 px-12 rounded"
                   onClick={() => buyNft(nft)}
