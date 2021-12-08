@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "hardhat/console.sol";
 
@@ -86,18 +87,43 @@ contract NFTMarket {
 
     /* Creates the sale of a marketplace item */
     /* Transfers ownership of the item, as well as funds between parties */
-    function createMarketSale(address nftContract, uint256 itemId)
-        public
-        payable
-    {
+    function createMarketSale(
+        address nftContract,
+        uint256 itemId,
+        bool inEther,
+        address tokenContract,
+        uint256 tokenValue
+    ) public payable {
         uint256 price = idToMarketItem[itemId].price;
         uint256 tokenId = idToMarketItem[itemId].tokenId;
-        require(
-            msg.value == price,
-            "Please submit the asking price in order to complete the purchase"
-        );
-        /* Transfer to seller*/
-        idToMarketItem[itemId].seller.transfer(msg.value);
+
+        if (inEther) {
+            require(
+                msg.value == price,
+                "Please submit the asking price in order to complete the purchase"
+            );
+            /* Transfer to seller*/
+            idToMarketItem[itemId].seller.transfer(msg.value);
+        } else {
+            uint256 equivalence;
+            uint256 resultEquivalence;
+            equivalence = price / 0.025 ether; //Quantity equivalent of tokens
+            console.log(equivalence);
+            resultEquivalence = tokenValue / equivalence;
+
+            //if the division is 1 it is the same price
+            require(
+                resultEquivalence == 1,
+                "Please submit the asking price in order to complete the purchase"
+            );
+            /* Transfer to seller*/
+            IERC20(tokenContract).transferFrom(
+                msg.sender,
+                idToMarketItem[itemId].seller,
+                tokenValue
+            );
+        }
+
         IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
         idToMarketItem[itemId].owner = payable(msg.sender);
         idToMarketItem[itemId].sold = true;
