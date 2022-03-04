@@ -108,12 +108,11 @@ contract NFTMarket {
             uint256 equivalence;
             uint256 resultEquivalence;
             equivalence = price / 0.025 ether; //Quantity equivalent of tokens
-            console.log(equivalence);
             resultEquivalence = tokenValue / equivalence;
 
             //if the division is 1 it is the same price
             require(
-                resultEquivalence == 1,
+                resultEquivalence == 1 ether,
                 "Please submit the asking price in order to complete the purchase"
             );
             /* Transfer to seller*/
