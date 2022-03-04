@@ -146,7 +146,7 @@ const Galery = () => {
                 ) : (
                   <select
                     onChange={(e) => setCoin(e.target.value)}
-                    className="form-select block w-full mt-1"
+                    className="text-2xl w-full text-black font-bold py-2 px-12 rounded"
                     value={coin}
                   >
                     <option value={0}>{nft.price} ETH</option>
@@ -156,7 +156,8 @@ const Galery = () => {
                     </option>
                   </select>
                 )}
-
+                <br></br>
+                <br></br>
                 <button
                   className="w-full bg-indigo-500 text-white font-bold py-2 px-12 rounded"
                   onClick={() => buyNft(nft)}
